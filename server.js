@@ -26,7 +26,7 @@ app.use(cors({
     'http://localhost:5173',        
     'https://pjmtr.in' ,
     'https://www.pjmtr.in',
-     'https://red-tiger-134490.hostingersite.com/'
+    'https://grey-reindeer-100345.hostingersite.com'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
