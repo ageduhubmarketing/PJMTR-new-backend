@@ -55,7 +55,7 @@ const registerAuthor = async (req, res) => {
       });
     }
 
-    // Send OTP Email
+   // Send OTP Email
 try {
   await tranEmailApi.sendTransacEmail({
     sender: {
@@ -70,12 +70,62 @@ try {
       }
     ],
 
-    templateId: 9,
+    subject: 'PJMTR Author Email Verification',
 
-    params: {
-      author_name: name.trim(),
-      otp: otp
-    }
+    htmlContent: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; color: #333;">
+
+        <h2 style="color: #07163A; margin-bottom: 20px;">
+          Welcome to PJMTR Author Portal
+        </h2>
+
+        <p>Dear ${name.trim()},</p>
+
+        <p>
+          Thank you for creating your author account with
+          <strong>Pacific Journal of Modern Theories and Research</strong>.
+        </p>
+
+        <p>
+          Please use the verification code below to verify your email address.
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+            Your Verification Code
+          </div>
+
+          <div style="
+            display: inline-block;
+            background: #F4F6FA;
+            color: #07163A;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            padding: 15px 25px;
+            border-radius: 8px;
+          ">
+            ${otp}
+          </div>
+        </div>
+
+        <p>
+          This verification code is valid for <strong>10 minutes</strong>.
+          Please do not share this code with anyone.
+        </p>
+
+        <p>
+          If you did not create this account, you can safely ignore this email.
+        </p>
+
+        <p style="margin-top: 30px;">
+          Regards,<br>
+          <strong>PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH</strong><br>
+          PJMTR Author Portal
+        </p>
+
+      </div>
+    `
   });
 
   console.log(`Author OTP email sent to ${normalizedEmail}`);
@@ -87,20 +137,6 @@ try {
     message: 'Account created, but OTP email could not be sent. Please try registration again.'
   });
 }
-
-res.status(200).json({
-  message: 'OTP sent successfully to your email'
-});
-
-} catch (error) {
-  console.error('Author Register Error:', error);
-
-  res.status(500).json({
-    message: 'Server error'
-  });
-}
-};
-
 // Verify Author OTP
 const verifyAuthorOTP = async (req, res) => {
   try {
