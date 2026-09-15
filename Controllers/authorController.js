@@ -162,8 +162,20 @@ const loginAuthor = async (req, res) => {
       });
     }
 
+    const token = jwt.sign(
+      {
+        id: author._id,
+        role: 'author'
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '7d'
+      }
+    );
+
     res.status(200).json({
       message: 'Login successful',
+      token,
       author: {
         id: author._id,
         name: author.name,
