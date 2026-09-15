@@ -2,10 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const authorAuth = require('../Middleware/authorAuth');
 
 // Import controller functions
 const {
   submitPaper,
+  submitAuthorPaper,
   getStatus,
   getFileById,
   getCoverLetter,
@@ -39,7 +41,17 @@ router.post(
   ]),
   submitPaper
 );
-
+// Submit paper by logged-in author
+router.post(
+  '/author-submit',
+  upload.fields([
+    { name: 'manuscriptFile', maxCount: 1 },
+    { name: 'coverLetter', maxCount: 1 },
+    { name: 'supplementaryFile', maxCount: 1 },
+  ]),
+  authorAuth,
+  submitAuthorPaper
+);
 // Get status of a paper by ID
 router.get('/status/:id', getStatus);
 
