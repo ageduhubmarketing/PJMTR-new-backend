@@ -49,6 +49,14 @@ const paperSchema = new mongoose.Schema({
   // Authors array
   authors: [authorSchema],
   correspondingAuthor: authorSchema,
+  
+// Author Ownership
+authorId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Author",
+  default: null,
+},
+  
   // Contact info
   country: String,
   state: String,
