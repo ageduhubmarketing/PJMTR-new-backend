@@ -1,6 +1,7 @@
 const Author = require('../Models/Author');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 // Register Author
 const registerAuthor = async (req, res) => {
