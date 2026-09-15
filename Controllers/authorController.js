@@ -2,6 +2,14 @@ const Author = require('../Models/Author');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const SibApiV3Sdk = require('sib-api-v3-sdk');
+
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+const apiKey = defaultClient.authentications['api-key'];
+
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
+const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 // Register Author
 const registerAuthor = async (req, res) => {
@@ -47,11 +55,91 @@ const registerAuthor = async (req, res) => {
       });
     }
 
-    console.log(`Author OTP for ${normalizedEmail}: ${otp}`);
+    // Send OTP Email
+    try {
+      await tranEmailApi.sendTransacEmail({
+        sender: {
+          email: 'editor@pjmtr.in',
+          name: 'PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH'
+        },
+
+        to: [
+          {
+            email: normalizedEmail,
+            name: name.trim()
+          }
+        ],
+
+        subject: 'PJMTR Author Email Verification',
+
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; background:#f5f7fb; padding:40px 20px;">
+            <div style="max-width:600px; margin:auto; background:#ffffff; border-radius:12px; padding:35px;">
+
+              <h2 style="color:#07163A; margin-bottom:10px;">
+                Welcome to PJMTR Author Portal
+              </h2>
+
+              <p style="color:#555; font-size:15px;">
+                Dear ${name.trim()},
+              </p>
+
+              <p style="color:#555; font-size:15px; line-height:1.6;">
+                Thank you for creating your author account with
+                Pacific Journal of Modern Theories and Research.
+                Please use the verification code below to verify your email address.
+              </p>
+
+              <div style="text-align:center; margin:30px 0;">
+                <div style="
+                  display:inline-block;
+                  background:#f4c542;
+                  color:#07163A;
+                  font-size:32px;
+                  font-weight:bold;
+                  letter-spacing:8px;
+                  padding:15px 25px;
+                  border-radius:8px;
+                ">
+                  ${otp}
+                </div>
+              </div>
+
+              <p style="color:#555; font-size:14px; line-height:1.6;">
+                This verification code is valid for <strong>10 minutes</strong>.
+                Please do not share this code with anyone.
+              </p>
+
+              <p style="color:#777; font-size:13px; margin-top:30px;">
+                If you did not create this account, you can safely ignore this email.
+              </p>
+
+              <hr style="border:none; border-top:1px solid #eee; margin:30px 0;">
+
+              <p style="color:#999; font-size:12px; text-align:center;">
+                PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH<br>
+                PJMTR Author Portal
+              </p>
+
+            </div>
+          </div>
+        `
+      });
+
+      console.log(`Author OTP email sent to ${normalizedEmail}`);
+
+    } catch (mailError) {
+      console.error('Brevo Author OTP Mail Error:', mailError);
+
+      return res.status(500).json({
+        message: 'Account created, but OTP email could not be sent. Please try registration again.'
+      });
+    }
 
     res.status(200).json({
-      message: 'OTP generated successfully'
+      message: 'OTP sent successfully to your email'
     });
+
   } catch (error) {
     console.error('Author Register Error:', error);
 
