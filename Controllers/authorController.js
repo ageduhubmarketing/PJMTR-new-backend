@@ -25,7 +25,6 @@ const registerAuthor = async (req, res) => {
     }
 
     const otp = crypto.randomInt(100000, 1000000).toString();
-    const hashedPassword = await bcrypt.hash(password, 10);
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     if (existingAuthor) {
