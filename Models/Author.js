@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 
 const authorSchema = new mongoose.Schema(
   {
+    // Registration Details
     name: {
       type: String,
       required: true,
@@ -22,14 +23,93 @@ const authorSchema = new mongoose.Schema(
       required: true
     },
 
+    // Email OTP Verification
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
+
+    emailOTP: {
+      type: String,
+      default: null
+    },
+
+    emailOTPExpires: {
+      type: Date,
+      default: null
+    },
+
+    // Profile Details
     mobile: {
       type: String,
-      trim: true
+      trim: true,
+      default: ''
+    },
+
+    designation: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    department: {
+      type: String,
+      trim: true,
+      default: ''
     },
 
     institution: {
       type: String,
-      trim: true
+      trim: true,
+      default: ''
+    },
+
+    qualification: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    researchInterest: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    orcidId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    address: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    city: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    state: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    country: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+
+    postalCode: {
+      type: String,
+      trim: true,
+      default: ''
     }
   },
   {
@@ -37,6 +117,7 @@ const authorSchema = new mongoose.Schema(
   }
 );
 
+// Password Hash
 authorSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
