@@ -1,4 +1,5 @@
 const Author = require('../Models/Author');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 // Register Author
@@ -124,7 +125,62 @@ const verifyAuthorOTP = async (req, res) => {
   }
 };
 
+// Login Author
+const loginAuthor = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'Email and password are required'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const author = await Author.findOne({
+      email: normalizedEmail
+    });
+
+    if (!author) {
+      return res.status(401).json({
+        message: 'Invalid email or password'
+      });
+    }
+
+    if (!author.isEmailVerified) {
+      return res.status(403).json({
+        message: 'Please verify your email before login'
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, author.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: 'Invalid email or password'
+      });
+    }
+
+    res.status(200).json({
+      message: 'Login successful',
+      author: {
+        id: author._id,
+        name: author.name,
+        email: author.email
+      }
+    });
+  } catch (error) {
+    console.error('Author Login Error:', error);
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
+
 module.exports = {
   registerAuthor,
-  verifyAuthorOTP
+  verifyAuthorOTP,
+  loginAuthor
 };
