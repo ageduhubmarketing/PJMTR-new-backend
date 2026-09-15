@@ -1,5 +1,4 @@
 const Author = require('../Models/Author');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 // Register Author
