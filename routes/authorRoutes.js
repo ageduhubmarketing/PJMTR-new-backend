@@ -3,8 +3,11 @@ const express = require('express');
 const {
   registerAuthor,
   verifyAuthorOTP,
-  loginAuthor
+  loginAuthor,
+  getAuthorProfile
 } = require('../Controllers/authorController');
+
+const authorAuth = require('../Middleware/authorAuth');
 
 const router = express.Router();
 
@@ -15,5 +18,7 @@ router.post('/register', registerAuthor);
 router.post('/verify-otp', verifyAuthorOTP);
 // Author Login
 router.post('/login', loginAuthor);
+// Get Author Profile
+router.get('/profile', authorAuth, getAuthorProfile);
 
 module.exports = router;
