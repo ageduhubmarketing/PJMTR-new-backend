@@ -29,7 +29,7 @@ const registerAuthor = async (req, res) => {
 
     if (existingAuthor) {
       existingAuthor.name = name.trim();
-      existingAuthor.password = hashedPassword;
+      existingAuthor.password = password;
       existingAuthor.emailOTP = otp;
       existingAuthor.emailOTPExpires = otpExpires;
 
@@ -38,7 +38,7 @@ const registerAuthor = async (req, res) => {
       await Author.create({
         name: name.trim(),
         email: normalizedEmail,
-        password: hashedPassword,
+        password,
         isEmailVerified: false,
         emailOTP: otp,
         emailOTPExpires: otpExpires
