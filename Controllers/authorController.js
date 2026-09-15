@@ -213,7 +213,76 @@ const getAuthorProfile = async (req, res) => {
     });
   }
 };
+// Update Author Profile
+const updateAuthorProfile = async (req, res) => {
+  try {
+    const {
+      mobile,
+      designation,
+      department,
+      institution,
+      qualification,
+      researchInterest,
+      orcidId,
+      address,
+      city,
+      state,
+      country,
+      postalCode
+    } = req.body;
+
+    const author = await Author.findById(req.author.id);
+
+    if (!author) {
+      return res.status(404).json({
+        message: 'Author not found'
+      });
+    }
+
+    author.mobile = mobile ?? author.mobile;
+    author.designation = designation ?? author.designation;
+    author.department = department ?? author.department;
+    author.institution = institution ?? author.institution;
+    author.qualification = qualification ?? author.qualification;
+    author.researchInterest = researchInterest ?? author.researchInterest;
+    author.orcidId = orcidId ?? author.orcidId;
+    author.address = address ?? author.address;
+    author.city = city ?? author.city;
+    author.state = state ?? author.state;
+    author.country = country ?? author.country;
+    author.postalCode = postalCode ?? author.postalCode;
+
+    await author.save();
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      author: {
+        id: author._id,
+        name: author.name,
+        email: author.email,
+        mobile: author.mobile,
+        designation: author.designation,
+        department: author.department,
+        institution: author.institution,
+        qualification: author.qualification,
+        researchInterest: author.researchInterest,
+        orcidId: author.orcidId,
+        address: author.address,
+        city: author.city,
+        state: author.state,
+        country: author.country,
+        postalCode: author.postalCode
+      }
+    });
+  } catch (error) {
+    console.error('Update Author Profile Error:', error);
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
 
 module.exports = {
-  registerAuthor,verifyAuthorOTP,loginAuthor,getAuthorProfile
+  registerAuthor,verifyAuthorOTP,loginAuthor,getAuthorProfile,updateAuthorProfile
 };
