@@ -16,6 +16,7 @@ const registerAuthor = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // Validate registration fields
     if (!name || !email || !password) {
       return res.status(400).json({
         message: 'Name, email and password are required'
@@ -24,27 +25,35 @@ const registerAuthor = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Check existing author
     const existingAuthor = await Author.findOne({
       email: normalizedEmail
     });
 
+    // Check verified account
     if (existingAuthor?.isEmailVerified) {
       return res.status(400).json({
         message: 'An account with this email already exists'
       });
     }
 
+    // Generate OTP
     const otp = crypto.randomInt(100000, 1000000).toString();
+
+    // Set OTP expiry
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
+    // Update existing unverified author
     if (existingAuthor) {
       existingAuthor.name = name.trim();
       existingAuthor.password = password;
       existingAuthor.emailOTP = otp;
       existingAuthor.emailOTPExpires = otpExpires;
+      existingAuthor.isEmailVerified = false;
 
       await existingAuthor.save();
     } else {
+      // Create new author
       await Author.create({
         name: name.trim(),
         email: normalizedEmail,
@@ -55,93 +64,145 @@ const registerAuthor = async (req, res) => {
       });
     }
 
-   // Send OTP Email
-try {
-  await tranEmailApi.sendTransacEmail({
-    sender: {
-      email: 'editor@pjmtr.in',
-      name: 'PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH'
-    },
+    // Send OTP Email
+    try {
+      await tranEmailApi.sendTransacEmail({
+        sender: {
+          email: 'editor@pjmtr.in',
+          name: 'PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH'
+        },
 
-    to: [
-      {
-        email: normalizedEmail,
-        name: name.trim()
-      }
-    ],
+        to: [
+          {
+            email: normalizedEmail,
+            name: name.trim()
+          }
+        ],
 
-    subject: 'PJMTR Author Email Verification',
+        subject: 'PJMTR Author Email Verification',
 
-    htmlContent: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; color: #333;">
-
-        <h2 style="color: #07163A; margin-bottom: 20px;">
-          Welcome to PJMTR Author Portal
-        </h2>
-
-        <p>Dear ${name.trim()},</p>
-
-        <p>
-          Thank you for creating your author account with
-          <strong>Pacific Journal of Modern Theories and Research</strong>.
-        </p>
-
-        <p>
-          Please use the verification code below to verify your email address.
-        </p>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
-            Your Verification Code
-          </div>
-
+        htmlContent: `
           <div style="
-            display: inline-block;
-            background: #F4F6FA;
-            color: #07163A;
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 8px;
-            padding: 15px 25px;
-            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            color: #333;
           ">
-            ${otp}
+
+            <h2 style="
+              color: #07163A;
+              margin-bottom: 20px;
+            ">
+              Welcome to PJMTR Author Portal
+            </h2>
+
+            <p>
+              Dear ${name.trim()},
+            </p>
+
+            <p>
+              Thank you for creating your author account with
+              <strong>
+                Pacific Journal of Modern Theories and Research
+              </strong>.
+            </p>
+
+            <p>
+              Please use the verification code below to verify
+              your email address.
+            </p>
+
+            <div style="
+              text-align: center;
+              margin: 30px 0;
+            ">
+
+              <div style="
+                font-size: 14px;
+                color: #666;
+                margin-bottom: 10px;
+              ">
+                Your Verification Code
+              </div>
+
+              <div style="
+                display: inline-block;
+                background: #F4F6FA;
+                color: #07163A;
+                font-size: 32px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                padding: 15px 25px;
+                border-radius: 8px;
+              ">
+                ${otp}
+              </div>
+
+            </div>
+
+            <p>
+              This verification code is valid for
+              <strong>10 minutes</strong>.
+              Please do not share this code with anyone.
+            </p>
+
+            <p>
+              If you did not create this account,
+              you can safely ignore this email.
+            </p>
+
+            <p style="margin-top: 30px;">
+              Regards,<br>
+              <strong>
+                PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH
+              </strong><br>
+              PJMTR Author Portal
+            </p>
+
           </div>
-        </div>
+        `
+      });
 
-        <p>
-          This verification code is valid for <strong>10 minutes</strong>.
-          Please do not share this code with anyone.
-        </p>
+      console.log(
+        `Author OTP email sent to ${normalizedEmail}`
+      );
 
-        <p>
-          If you did not create this account, you can safely ignore this email.
-        </p>
+    } catch (mailError) {
+      console.error(
+        'Brevo Author OTP Mail Error:',
+        mailError
+      );
 
-        <p style="margin-top: 30px;">
-          Regards,<br>
-          <strong>PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH</strong><br>
-          PJMTR Author Portal
-        </p>
+      return res.status(500).json({
+        message:
+          'Account created, but OTP email could not be sent. Please try registration again.'
+      });
+    }
 
-      </div>
-    `
-  });
+    // Registration success response
+    return res.status(200).json({
+      message: 'OTP sent successfully to your email'
+    });
 
-  console.log(`Author OTP email sent to ${normalizedEmail}`);
+  } catch (error) {
+    console.error(
+      'Author Register Error:',
+      error
+    );
 
-} catch (mailError) {
-  console.error('Brevo Author OTP Mail Error:', mailError);
+    return res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
 
-  return res.status(500).json({
-    message: 'Account created, but OTP email could not be sent. Please try registration again.'
-  });
-}
 // Verify Author OTP
 const verifyAuthorOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
+    // Validate OTP fields
     if (!email || !otp) {
       return res.status(400).json({
         message: 'Email and OTP are required'
@@ -150,6 +211,7 @@ const verifyAuthorOTP = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Find author
     const author = await Author.findOne({
       email: normalizedEmail
     });
@@ -160,43 +222,52 @@ const verifyAuthorOTP = async (req, res) => {
       });
     }
 
+    // Check verification status
     if (author.isEmailVerified) {
       return res.status(400).json({
         message: 'Email is already verified'
       });
     }
 
+    // Check OTP availability
     if (!author.emailOTP || !author.emailOTPExpires) {
       return res.status(400).json({
         message: 'OTP not found. Please register again'
       });
     }
 
+    // Check OTP expiry
     if (new Date() > author.emailOTPExpires) {
       return res.status(400).json({
         message: 'OTP has expired. Please register again'
       });
     }
 
+    // Check OTP value
     if (author.emailOTP !== otp.toString().trim()) {
       return res.status(400).json({
         message: 'Invalid OTP'
       });
     }
 
+    // Verify author email
     author.isEmailVerified = true;
     author.emailOTP = null;
     author.emailOTPExpires = null;
 
     await author.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Email verified successfully'
     });
-  } catch (error) {
-    console.error('Author OTP Verification Error:', error);
 
-    res.status(500).json({
+  } catch (error) {
+    console.error(
+      'Author OTP Verification Error:',
+      error
+    );
+
+    return res.status(500).json({
       message: 'Server error'
     });
   }
@@ -207,6 +278,7 @@ const loginAuthor = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate login fields
     if (!email || !password) {
       return res.status(400).json({
         message: 'Email and password are required'
@@ -215,6 +287,7 @@ const loginAuthor = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Find author
     const author = await Author.findOne({
       email: normalizedEmail
     });
@@ -225,13 +298,18 @@ const loginAuthor = async (req, res) => {
       });
     }
 
+    // Check email verification
     if (!author.isEmailVerified) {
       return res.status(403).json({
         message: 'Please verify your email before login'
       });
     }
 
-    const isMatch = await bcrypt.compare(password, author.password);
+    // Check password
+    const isMatch = await bcrypt.compare(
+      password,
+      author.password
+    );
 
     if (!isMatch) {
       return res.status(401).json({
@@ -239,6 +317,7 @@ const loginAuthor = async (req, res) => {
       });
     }
 
+    // Generate author JWT
     const token = jwt.sign(
       {
         id: author._id,
@@ -250,7 +329,7 @@ const loginAuthor = async (req, res) => {
       }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Login successful',
       token,
       author: {
@@ -259,18 +338,28 @@ const loginAuthor = async (req, res) => {
         email: author.email
       }
     });
-  } catch (error) {
-    console.error('Author Login Error:', error);
 
-    res.status(500).json({
+  } catch (error) {
+    console.error(
+      'Author Login Error:',
+      error
+    );
+
+    return res.status(500).json({
       message: 'Server error'
     });
   }
 };
+
 // Get Author Profile
 const getAuthorProfile = async (req, res) => {
   try {
-    const author = await Author.findById(req.author.id).select('-password -emailOTP -emailOTPExpires');
+    // Find logged-in author
+    const author = await Author.findById(
+      req.author.id
+    ).select(
+      '-password -emailOTP -emailOTPExpires'
+    );
 
     if (!author) {
       return res.status(404).json({
@@ -278,17 +367,22 @@ const getAuthorProfile = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       author
     });
-  } catch (error) {
-    console.error('Get Author Profile Error:', error);
 
-    res.status(500).json({
+  } catch (error) {
+    console.error(
+      'Get Author Profile Error:',
+      error
+    );
+
+    return res.status(500).json({
       message: 'Server error'
     });
   }
 };
+
 // Update Author Profile
 const updateAuthorProfile = async (req, res) => {
   try {
@@ -307,7 +401,10 @@ const updateAuthorProfile = async (req, res) => {
       postalCode
     } = req.body;
 
-    const author = await Author.findById(req.author.id);
+    // Find logged-in author
+    const author = await Author.findById(
+      req.author.id
+    );
 
     if (!author) {
       return res.status(404).json({
@@ -315,22 +412,26 @@ const updateAuthorProfile = async (req, res) => {
       });
     }
 
+    // Update profile fields
     author.mobile = mobile ?? author.mobile;
     author.designation = designation ?? author.designation;
     author.department = department ?? author.department;
     author.institution = institution ?? author.institution;
-    author.qualification = qualification ?? author.qualification;
-    author.researchInterest = researchInterest ?? author.researchInterest;
+    author.qualification =
+      qualification ?? author.qualification;
+    author.researchInterest =
+      researchInterest ?? author.researchInterest;
     author.orcidId = orcidId ?? author.orcidId;
     author.address = address ?? author.address;
     author.city = city ?? author.city;
     author.state = state ?? author.state;
     author.country = country ?? author.country;
-    author.postalCode = postalCode ?? author.postalCode;
+    author.postalCode =
+      postalCode ?? author.postalCode;
 
     await author.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Profile updated successfully',
       author: {
         id: author._id,
@@ -350,15 +451,23 @@ const updateAuthorProfile = async (req, res) => {
         postalCode: author.postalCode
       }
     });
-  } catch (error) {
-    console.error('Update Author Profile Error:', error);
 
-    res.status(500).json({
+  } catch (error) {
+    console.error(
+      'Update Author Profile Error:',
+      error
+    );
+
+    return res.status(500).json({
       message: 'Server error'
     });
   }
 };
 
 module.exports = {
-  registerAuthor,verifyAuthorOTP,loginAuthor,getAuthorProfile,updateAuthorProfile
+  registerAuthor,
+  verifyAuthorOTP,
+  loginAuthor,
+  getAuthorProfile,
+  updateAuthorProfile
 };
