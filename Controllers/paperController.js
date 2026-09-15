@@ -67,7 +67,6 @@ exports.submitPaper = async (req, res) => {
       nonPreferredReviewer,
       agreement,
     } = req.body;
-
     // ==============================
     // Handle Uploaded Files
     // ==============================
@@ -294,6 +293,190 @@ if (recipientEmail) {
   } catch (error) {
     console.error("Error submitting paper:", error);
     res.status(500).json({ error: "Server error while submitting paper" });
+  }
+};
+
+// Submit Paper by Author
+exports.submitAuthorPaper = async (req, res) => {
+  try {
+    const {
+      manuscriptType,
+      title,
+      abstract,
+      keywords,
+      researchArea,
+      authors,
+      correspondingAuthor,
+      country,
+      state,
+      city,
+      postalCode,
+      address,
+      message,
+      ethicalApproval,
+      ethicalApprovalNumber,
+      conflictOfInterest,
+      conflictDetails,
+      fundingSupport,
+      fundingAmount,
+      fundingInstitution,
+      reviewers,
+      nonPreferredReviewer,
+      agreement
+    } = req.body;
+
+    // Handle Uploaded Files
+    const manuscriptFile = req.files?.manuscriptFile?.[0];
+    const coverLetter = req.files?.coverLetter?.[0];
+    const supplementaryFile = req.files?.supplementaryFile?.[0];
+
+    // Parse Authors
+    let authorsArray = [];
+
+    if (authors) {
+      if (typeof authors === "string") {
+        try {
+          authorsArray = JSON.parse(authors);
+        } catch {
+          authorsArray = [];
+        }
+      } else if (Array.isArray(authors)) {
+        authorsArray = authors;
+      }
+    }
+
+    // Parse Corresponding Author
+    let formattedCorrespondingAuthor = {};
+
+    if (correspondingAuthor) {
+      try {
+        const parsedCorrespondingAuthor =
+          typeof correspondingAuthor === "string"
+            ? JSON.parse(correspondingAuthor)
+            : correspondingAuthor;
+
+        formattedCorrespondingAuthor = {
+          sameAsAuthor: parsedCorrespondingAuthor.sameAsAuthor || false,
+          salutation: parsedCorrespondingAuthor.salutation || "",
+          firstName: parsedCorrespondingAuthor.firstName || "",
+          middleName: parsedCorrespondingAuthor.middleName || "",
+          lastName: parsedCorrespondingAuthor.lastName || "",
+          designation: parsedCorrespondingAuthor.designation || "",
+          department: parsedCorrespondingAuthor.department || "",
+          organization: parsedCorrespondingAuthor.organization || "",
+          email: parsedCorrespondingAuthor.email || "",
+          mobile: parsedCorrespondingAuthor.mobile || "",
+          country: parsedCorrespondingAuthor.country || "",
+          address: parsedCorrespondingAuthor.address || "",
+          orcid: parsedCorrespondingAuthor.orcid || ""
+        };
+      } catch {
+        formattedCorrespondingAuthor = {};
+      }
+    }
+
+    // Format Authors
+    const formattedAuthors = authorsArray.map((a) => ({
+      salutation: a.salutation || "",
+      firstName: a.firstName || "",
+      middleName: a.middleName || "",
+      lastName: a.lastName || "",
+      designation: a.designation || "",
+      department: a.department || "",
+      organization: a.organization || "",
+      email: a.email || "",
+      mobile: a.mobile || "",
+      country: a.country || "",
+      address: a.address || "",
+      orcid: a.orcid || ""
+    }));
+
+    // Parse Reviewers
+    let reviewersArray = [];
+
+    if (reviewers) {
+      if (typeof reviewers === "string") {
+        try {
+          reviewersArray = JSON.parse(reviewers);
+        } catch {
+          reviewersArray = [];
+        }
+      } else if (Array.isArray(reviewers)) {
+        reviewersArray = reviewers;
+      }
+    }
+
+    const formattedReviewers = reviewersArray.map((r) => ({
+      name: r.name || "",
+      email: r.email || "",
+      institution: r.institution || ""
+    }));
+
+    // Create Author Paper
+    const newPaper = new Paper({
+      authorId: req.author.id,
+      manuscriptType,
+      title,
+      abstract,
+      keywords,
+      researchArea,
+      authors: formattedAuthors,
+      correspondingAuthor: formattedCorrespondingAuthor,
+      country,
+      state,
+      city,
+      postalCode,
+      address,
+      message,
+      ethicalApproval,
+      ethicalApprovalNumber,
+      conflictOfInterest,
+      conflictDetails,
+      fundingSupport,
+      fundingAmount,
+      fundingInstitution,
+      reviewers: formattedReviewers,
+      nonPreferredReviewer,
+      agreement: agreement === "true" || agreement === true,
+
+      file: manuscriptFile
+        ? {
+            filename: manuscriptFile.originalname,
+            contentType: manuscriptFile.mimetype,
+            data: manuscriptFile.buffer
+          }
+        : undefined,
+
+      coverLetter: coverLetter
+        ? {
+            filename: coverLetter.originalname,
+            contentType: coverLetter.mimetype,
+            data: coverLetter.buffer
+          }
+        : undefined,
+
+      supplementaryFile: supplementaryFile
+        ? {
+            filename: supplementaryFile.originalname,
+            contentType: supplementaryFile.mimetype,
+            data: supplementaryFile.buffer
+          }
+        : undefined
+    });
+
+    await newPaper.save();
+
+    res.status(201).json({
+      message: "Paper submitted successfully",
+      id: newPaper._id,
+      applicationId: newPaper.applicationId
+    });
+  } catch (error) {
+    console.error("Author Paper Submission Error:", error);
+
+    res.status(500).json({
+      error: "Server error while submitting paper"
+    });
   }
 };
 
