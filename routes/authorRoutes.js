@@ -1,10 +1,7 @@
 const express = require('express');
 
 const {
-  registerAuthor,
-  verifyAuthorOTP,
-  loginAuthor,
-  getAuthorProfile
+  registerAuthor,verifyAuthorOTP,loginAuthor,getAuthorProfile,updateAuthorProfile
 } = require('../Controllers/authorController');
 
 const authorAuth = require('../Middleware/authorAuth');
@@ -20,5 +17,7 @@ router.post('/verify-otp', verifyAuthorOTP);
 router.post('/login', loginAuthor);
 // Get Author Profile
 router.get('/profile', authorAuth, getAuthorProfile);
+// Update Author Profile
+router.put('/profile', authorAuth, updateAuthorProfile);
 
 module.exports = router;
