@@ -1,11 +1,10 @@
 const Author = require('../Models/Author');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-// AUTHOR REGISTER
 const registerAuthor = async (req, res) => {
   try {
-    const { name, email, password, mobile, institution } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -13,32 +12,48 @@ const registerAuthor = async (req, res) => {
       });
     }
 
-    const existingAuthor = await Author.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
 
-    if (existingAuthor) {
+    const existingAuthor = await Author.findOne({
+      email: normalizedEmail
+    });
+
+    if (existingAuthor?.isEmailVerified) {
       return res.status(400).json({
-        message: 'Author with this email already exists'
+        message: 'An account with this email already exists'
       });
     }
 
-    const author = await Author.create({
-      name,
-      email,
-      password,
-      mobile,
-      institution
+    const otp = crypto.randomInt(100000, 1000000).toString();
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    if (existingAuthor) {
+      existingAuthor.name = name.trim();
+      existingAuthor.password = hashedPassword;
+      existingAuthor.emailOTP = otp;
+      existingAuthor.emailOTPExpires = otpExpires;
+      await existingAuthor.save();
+    } else {
+      await Author.create({
+        name: name.trim(),
+        email: normalizedEmail,
+        password: hashedPassword,
+        isEmailVerified: false,
+        emailOTP: otp,
+        emailOTPExpires: otpExpires
+      });
+    }
+
+    // TEMP: OTP will be connected to email service in the next step
+    console.log(`Author OTP for ${normalizedEmail}: ${otp}`);
+
+    res.status(200).json({
+      message: 'OTP sent successfully'
     });
 
-    res.status(201).json({
-      message: 'Author registered successfully',
-      author: {
-        id: author._id,
-        name: author.name,
-        email: author.email,
-        mobile: author.mobile,
-        institution: author.institution
-      }
-    });
   } catch (error) {
     console.error('Author Register Error:', error);
 
@@ -48,66 +63,6 @@ const registerAuthor = async (req, res) => {
   }
 };
 
-
-// AUTHOR LOGIN
-const loginAuthor = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        message: 'Email and password are required'
-      });
-    }
-
-    const author = await Author.findOne({ email });
-
-    if (!author) {
-      return res.status(401).json({
-        message: 'Invalid email or password'
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, author.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        message: 'Invalid email or password'
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        id: author._id,
-        role: 'author'
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: '7d'
-      }
-    );
-
-    res.status(200).json({
-      message: 'Login successful',
-      token,
-      author: {
-        id: author._id,
-        name: author.name,
-        email: author.email,
-        mobile: author.mobile,
-        institution: author.institution
-      }
-    });
-  } catch (error) {
-    console.error('Author Login Error:', error);
-
-    res.status(500).json({
-      message: 'Server error'
-    });
-  }
-};
-
 module.exports = {
-  registerAuthor,
-  loginAuthor
+  registerAuthor
 };
