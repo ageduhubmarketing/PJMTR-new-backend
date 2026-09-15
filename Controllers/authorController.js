@@ -191,9 +191,29 @@ const loginAuthor = async (req, res) => {
     });
   }
 };
+// Get Author Profile
+const getAuthorProfile = async (req, res) => {
+  try {
+    const author = await Author.findById(req.author.id).select('-password -emailOTP -emailOTPExpires');
+
+    if (!author) {
+      return res.status(404).json({
+        message: 'Author not found'
+      });
+    }
+
+    res.status(200).json({
+      author
+    });
+  } catch (error) {
+    console.error('Get Author Profile Error:', error);
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
 
 module.exports = {
-  registerAuthor,
-  verifyAuthorOTP,
-  loginAuthor
+  registerAuthor,verifyAuthorOTP,loginAuthor,getAuthorProfile
 };
