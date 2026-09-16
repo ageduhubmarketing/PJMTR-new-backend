@@ -21,18 +21,49 @@ app.use("/uploads", express.static("uploads"));
 const PORT = process.env.PORT || 5000;
 
 // CORS Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://pjmtr.in',
-    'https://www.pjmtr.in',
-    'https://grey-reindeer-100345.hostingersite.com'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://pjmtr.in",
+  "https://www.pjmtr.in",
+  "https://grey-reindeer-100345.hostingersite.com"
+];
 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests without origin
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked CORS Origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
+
+    credentials: true,
+
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+      "OPTIONS"
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ]
+  })
+);
+
+// Handle preflight requests
+app.options(/.*/, cors());
 // JSON parsing
 app.use(express.json());
 
