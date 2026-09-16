@@ -304,7 +304,12 @@ exports.getAuthorSubmissions = async (req, res) => {
   try {
     const papers = await Paper.find({
       authorId: req.author.id,
-    }).sort({ createdAt: -1 });
+    })
+      .select(
+        "-file.data -coverLetter.data -supplementaryFile.data"
+      )
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json(papers);
   } catch (error) {
