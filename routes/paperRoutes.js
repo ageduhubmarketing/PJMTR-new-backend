@@ -27,20 +27,7 @@ const {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// =============================
-// Routes
-// =============================
 
-// Submit paper with 3 files: manuscript, cover letter, supplementary file
-router.post(
-  '/submit',
-  upload.fields([
-    { name: 'manuscriptFile', maxCount: 1 },
-    { name: 'coverLetter', maxCount: 1 },
-    { name: 'supplementaryFile', maxCount: 1 },
-  ]),
-  submitPaper
-);
 // Submit paper by logged-in author
 router.post(
   '/author-submit',
