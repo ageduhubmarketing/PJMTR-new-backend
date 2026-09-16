@@ -36,266 +36,6 @@ const getRecipientDetails = (paper) => {
 
 };
 
-// ==============================
-// Submit Paper
-// ==============================
-exports.submitPaper = async (req, res) => {
-  console.log("NEW PAPER CONTROLLER RUNNING");
-  try {
-    const {
-      manuscriptType,
-      title,
-      abstract,
-      keywords,
-      researchArea,
-      authors,
-      correspondingAuthor,
-      country,
-      state,
-      city,
-      postalCode,
-      address,
-      message,
-      ethicalApproval,
-      ethicalApprovalNumber,
-      conflictOfInterest,
-      conflictDetails,
-      fundingSupport,
-      fundingAmount,
-      fundingInstitution,
-      reviewers,
-      nonPreferredReviewer,
-      agreement,
-    } = req.body;
-    // ==============================
-    // Handle Uploaded Files
-    // ==============================
-    const manuscriptFile = req.files?.manuscriptFile?.[0];
-    const coverLetter = req.files?.coverLetter?.[0];
-    const supplementaryFile = req.files?.supplementaryFile?.[0];
-
-    // ==============================
-    // Parse Authors Safely
-    // ==============================
-    let authorsArray = [];
-    if (authors) {
-      if (typeof authors === "string") {
-        try {
-          authorsArray = JSON.parse(authors);
-        } catch {
-          authorsArray = [];
-        }
-      } else if (Array.isArray(authors)) {
-        authorsArray = authors;
-      }
-    }
-    let formattedCorrespondingAuthor = {};
-
-if (correspondingAuthor) {
-  try {
-    const parsedCorrespondingAuthor =
-      typeof correspondingAuthor === "string"
-        ? JSON.parse(correspondingAuthor)
-        : correspondingAuthor;
-
-    formattedCorrespondingAuthor = {
-      sameAsAuthor: parsedCorrespondingAuthor.sameAsAuthor || false,
-      salutation: parsedCorrespondingAuthor.salutation || "",
-      firstName: parsedCorrespondingAuthor.firstName || "",
-      middleName: parsedCorrespondingAuthor.middleName || "",
-      lastName: parsedCorrespondingAuthor.lastName || "",
-      designation: parsedCorrespondingAuthor.designation || "",
-      department: parsedCorrespondingAuthor.department || "",
-      organization: parsedCorrespondingAuthor.organization || "",
-      email: parsedCorrespondingAuthor.email || "",
-      mobile: parsedCorrespondingAuthor.mobile || "",
-      country: parsedCorrespondingAuthor.country || "",
-      address: parsedCorrespondingAuthor.address || "",
-      orcid: parsedCorrespondingAuthor.orcid || "",
-    };
-  } catch {
-    formattedCorrespondingAuthor = {};
-  }
-}
-    const formattedAuthors = authorsArray.map((a) => ({
-      salutation: a.salutation || "",
-      firstName: a.firstName || "",
-      middleName: a.middleName || "",
-      lastName: a.lastName || "",
-      designation: a.designation || "",
-      department: a.department || "",
-      organization: a.organization || "",
-      email: a.email || "",
-      mobile: a.mobile || "",
-      country: a.country || "",
-      address: a.address || "",
-      orcid: a.orcid || "",
-    }));
-
-    // ==============================
-    // Parse Reviewers Safely
-    // ==============================
-    let reviewersArray = [];
-    if (reviewers) {
-      if (typeof reviewers === "string") {
-        try {
-          reviewersArray = JSON.parse(reviewers);
-        } catch {
-          reviewersArray = [];
-        }
-      } else if (Array.isArray(reviewers)) {
-        reviewersArray = reviewers;
-      }
-    }
-
-    const formattedReviewers = reviewersArray.map((r) => ({
-      name: r.name || "",
-      email: r.email || "",
-      institution: r.institution || "",
-    }));
-
-    // ==============================
-    // Create New Paper
-    // ==============================
-    console.log("Corresponding Author:", formattedCorrespondingAuthor);
-    const newPaper = new Paper({
-      manuscriptType,
-      title,
-      abstract,
-      keywords,
-      researchArea,
-      authors: formattedAuthors,
-      correspondingAuthor: formattedCorrespondingAuthor,
-      country,
-      state,
-      city,
-      postalCode,
-      address,
-      message,
-      ethicalApproval,
-      ethicalApprovalNumber,
-      conflictOfInterest,
-      conflictDetails,
-      fundingSupport,
-      fundingAmount,
-      fundingInstitution,
-      reviewers: formattedReviewers,
-      nonPreferredReviewer,
-      agreement: agreement === "true" || agreement === true,
-      file: manuscriptFile
-        ? {
-            filename: manuscriptFile.originalname,
-            contentType: manuscriptFile.mimetype,
-            data: manuscriptFile.buffer,
-          }
-        : undefined,
-      coverLetter: coverLetter
-        ? {
-            filename: coverLetter.originalname,
-            contentType: coverLetter.mimetype,
-            data: coverLetter.buffer,
-          }
-        : undefined,
-      supplementaryFile: supplementaryFile
-        ? {
-            filename: supplementaryFile.originalname,
-            contentType: supplementaryFile.mimetype,
-            data: supplementaryFile.buffer,
-          }
-        : undefined,
-    });
-
-    await newPaper.save();
-   // ==============================
-// AUTO SYNC PAPER TO OJS
-// ==============================
-try {
-  const ojsResult = await syncPaperToOJS(newPaper);
-
-  console.log(
-    "OJS AUTO SYNC SUCCESS:",
-    newPaper.applicationId,
-    ojsResult.submissionId
-  );
-} catch (ojsError) {
-  console.error(
-    "OJS AUTO SYNC FAILED:",
-    newPaper.applicationId,
-    ojsError.response?.data || ojsError.message
-  );
-}
-    // ==============================
-// SEND CONFIRMATION EMAIL
-// ==============================
-
-try {
-
-  const recipientEmail =
-  formattedCorrespondingAuthor?.email?.trim()
-    ? formattedCorrespondingAuthor.email.trim()
-    : formattedAuthors?.[0]?.email?.trim() || null;
-
-const recipientName =
-  formattedCorrespondingAuthor?.email?.trim()
-    ? `${formattedCorrespondingAuthor.firstName || ""} ${formattedCorrespondingAuthor.lastName || ""}`.trim()
-    : `${formattedAuthors?.[0]?.firstName || ""} ${formattedAuthors?.[0]?.lastName || ""}`.trim();
-
-if (recipientEmail) {
-
-  await tranEmailApi.sendTransacEmail({
-
-    sender: {
-      email: "editor@pjmtr.in",
-      name: "PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH",
-    },
-
-    to: [
-      {
-        email: recipientEmail,
-        name: recipientName,
-      },
-    ],
-
-    templateId: 2,
-
-    params: {
-
-      author_name: recipientName,
-
-      title: title,
-
-      applicationId: newPaper.applicationId,
-
-      trackingLink:
-        `https://pjmtr.in/track-paper/${newPaper.applicationId}`,
-
-    },
-
-  });
-
-  console.log(
-    "Confirmation email sent successfully"
-  );}
-
-} catch (mailError) {
-
-  console.log("Brevo Mail Error:", mailError);
-
-}
-
-    res
-      .status(201)
-      .json({
-        message: "Paper submitted successfully",
-        id: newPaper._id,
-        applicationId: newPaper.applicationId,
-      });
-  } catch (error) {
-    console.error("Error submitting paper:", error);
-    res.status(500).json({ error: "Server error while submitting paper" });
-  }
-};
-
 // Submit Paper by Author
 exports.submitAuthorPaper = async (req, res) => {
   try {
@@ -466,6 +206,61 @@ exports.submitAuthorPaper = async (req, res) => {
 
     await newPaper.save();
 
+    // ==============================
+    // AUTO SYNC PAPER TO OJS
+    // ==============================
+    try {
+      const ojsResult = await syncPaperToOJS(newPaper);
+
+      console.log(
+        "OJS AUTO SYNC SUCCESS:",
+        newPaper.applicationId,
+        ojsResult.submissionId
+      );
+    } catch (ojsError) {
+      console.error(
+        "OJS AUTO SYNC FAILED:",
+        newPaper.applicationId,
+        ojsError.response?.data || ojsError.message
+      );
+    }
+
+    // ==============================
+    // SEND CONFIRMATION EMAIL
+    // ==============================
+    try {
+      const recipientEmail =
+        formattedCorrespondingAuthor?.email?.trim()
+          ? formattedCorrespondingAuthor.email.trim()
+          : formattedAuthors?.[0]?.email?.trim() || null;
+
+      const recipientName =
+        formattedCorrespondingAuthor?.email?.trim()
+          ? `${formattedCorrespondingAuthor.firstName || ""} ${formattedCorrespondingAuthor.lastName || ""}`.trim()
+          : `${formattedAuthors?.[0]?.firstName || ""} ${formattedAuthors?.[0]?.lastName || ""}`.trim();
+
+      if (recipientEmail) {
+        await tranEmailApi.sendTransacEmail({
+          sender: {
+            email: "editor@pjmtr.in",
+            name: "PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH",
+          },
+          to: [{ email: recipientEmail, name: recipientName }],
+          templateId: 2,
+          params: {
+            author_name: recipientName,
+            title,
+            applicationId: newPaper.applicationId,
+            trackingLink: `https://pjmtr.in/track-paper/${newPaper.applicationId}`,
+          },
+        });
+
+        console.log("Confirmation email sent successfully");
+      }
+    } catch (mailError) {
+      console.log("Brevo Mail Error:", mailError);
+    }
+
     res.status(201).json({
       message: "Paper submitted successfully",
       id: newPaper._id,
@@ -479,7 +274,6 @@ exports.submitAuthorPaper = async (req, res) => {
     });
   }
 };
-
 
 // ==============================
 // Get All Papers (Admin Dashboard)
