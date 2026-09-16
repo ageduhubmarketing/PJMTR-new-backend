@@ -40,6 +40,12 @@ router.post(
   authorAuth,
   submitAuthorPaper
 );
+// Get logged-in author's submissions
+router.get(
+  '/author-submissions',
+  authorAuth,
+  getAuthorSubmissions
+);
 // Get status of a paper by ID
 router.get('/status/:id', getStatus);
 
