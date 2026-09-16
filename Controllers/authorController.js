@@ -355,9 +355,7 @@ const loginAuthor = async (req, res) => {
 const getAuthorProfile = async (req, res) => {
   try {
     // Find logged-in author
-    const author = await Author.findById(
-      req.author.id
-    ).select(
+    const author = await Author.findById(req.author.id).select(
       '-password -emailOTP -emailOTPExpires'
     );
 
@@ -367,15 +365,38 @@ const getAuthorProfile = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      author
-    });
+    // Prepare profile image
+    let profileImage = null;
 
+    if (author.profileImage?.data && author.profileImage?.contentType) {
+      profileImage = {
+        contentType: author.profileImage.contentType,
+        data: author.profileImage.data.toString('base64')
+      };
+    }
+
+    return res.status(200).json({
+      author: {
+        id: author._id,
+        name: author.name,
+        email: author.email,
+        mobile: author.mobile,
+        designation: author.designation,
+        department: author.department,
+        institution: author.institution,
+        qualification: author.qualification,
+        researchInterest: author.researchInterest,
+        orcidId: author.orcidId,
+        address: author.address,
+        city: author.city,
+        state: author.state,
+        country: author.country,
+        postalCode: author.postalCode,
+        profileImage
+      }
+    });
   } catch (error) {
-    console.error(
-      'Get Author Profile Error:',
-      error
-    );
+    console.error('Get Author Profile Error:', error);
 
     return res.status(500).json({
       message: 'Server error'
@@ -402,9 +423,7 @@ const updateAuthorProfile = async (req, res) => {
     } = req.body;
 
     // Find logged-in author
-    const author = await Author.findById(
-      req.author.id
-    );
+    const author = await Author.findById(req.author.id);
 
     if (!author) {
       return res.status(404).json({
@@ -417,8 +436,7 @@ const updateAuthorProfile = async (req, res) => {
     author.designation = designation ?? author.designation;
     author.department = department ?? author.department;
     author.institution = institution ?? author.institution;
-    author.qualification =
-      qualification ?? author.qualification;
+    author.qualification = qualification ?? author.qualification;
     author.researchInterest =
       researchInterest ?? author.researchInterest;
     author.orcidId = orcidId ?? author.orcidId;
@@ -426,13 +444,31 @@ const updateAuthorProfile = async (req, res) => {
     author.city = city ?? author.city;
     author.state = state ?? author.state;
     author.country = country ?? author.country;
-    author.postalCode =
-      postalCode ?? author.postalCode;
+    author.postalCode = postalCode ?? author.postalCode;
+
+    // Update profile image
+    if (req.file) {
+      author.profileImage = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
+    }
 
     await author.save();
 
+    // Prepare profile image
+    let profileImage = null;
+
+    if (author.profileImage?.data && author.profileImage?.contentType) {
+      profileImage = {
+        contentType: author.profileImage.contentType,
+        data: author.profileImage.data.toString('base64')
+      };
+    }
+
     return res.status(200).json({
       message: 'Profile updated successfully',
+
       author: {
         id: author._id,
         name: author.name,
@@ -448,15 +484,12 @@ const updateAuthorProfile = async (req, res) => {
         city: author.city,
         state: author.state,
         country: author.country,
-        postalCode: author.postalCode
+        postalCode: author.postalCode,
+        profileImage
       }
     });
-
   } catch (error) {
-    console.error(
-      'Update Author Profile Error:',
-      error
-    );
+    console.error('Update Author Profile Error:', error);
 
     return res.status(500).json({
       message: 'Server error'
