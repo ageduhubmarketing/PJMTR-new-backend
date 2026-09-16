@@ -299,6 +299,23 @@ exports.getAllPapers = async (req, res) => {
       .json({ message: "Failed to fetch papers", error: err.message });
   }
 };
+// Get Logged-in Author's Submissions
+exports.getAuthorSubmissions = async (req, res) => {
+  try {
+    const papers = await Paper.find({
+      authorId: req.author.id,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(papers);
+  } catch (error) {
+    console.error("Get Author Submissions Error:", error);
+
+    res.status(500).json({
+      message: "Failed to fetch author submissions",
+      error: error.message,
+    });
+  }
+};
 exports.getCoverLetter = async (req, res) => {
   try {
     const paper = await Paper.findById(req.params.id);
