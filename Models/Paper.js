@@ -87,7 +87,18 @@ assignedReviewers: [
 ],
 
   // Agreement
-  agreement: { type: Boolean, default: false },
+agreement: { type: Boolean, default: false },
+
+// Declarations
+generativeAIUsageDeclaration: {
+  type: Boolean,
+  default: false,
+},
+
+apcPaymentDeclaration: {
+  type: Boolean,
+  default: false,
+},
 
   // Uploaded files
   file: fileSchema,
