@@ -449,11 +449,12 @@ const updateAuthorProfile = async (req, res) => {
     // Update profile image
     if (req.file) {
       author.profileImage = {
-        data: req.file.buffer,
+        data: Buffer.from(req.file.buffer),
         contentType: req.file.mimetype
       };
     }
-
+    
+    // Save Author Profile
     await author.save();
 
     // Prepare profile image
