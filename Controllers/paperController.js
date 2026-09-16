@@ -62,7 +62,9 @@ exports.submitAuthorPaper = async (req, res) => {
       fundingInstitution,
       reviewers,
       nonPreferredReviewer,
-      agreement
+      agreement,
+      generativeAIUsageDeclaration,
+      apcPaymentDeclaration
     } = req.body;
 
     // Handle Uploaded Files
@@ -178,6 +180,15 @@ exports.submitAuthorPaper = async (req, res) => {
       reviewers: formattedReviewers,
       nonPreferredReviewer,
       agreement: agreement === "true" || agreement === true,
+     agreement: agreement === "true" || agreement === true,
+
+     generativeAIUsageDeclaration:
+       generativeAIUsageDeclaration === "true" ||
+       generativeAIUsageDeclaration === true,
+     
+     apcPaymentDeclaration:
+       apcPaymentDeclaration === "true" ||
+       apcPaymentDeclaration === true,
 
       file: manuscriptFile
         ? {
