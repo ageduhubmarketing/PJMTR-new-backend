@@ -16,6 +16,7 @@ const {
   rejectPaper,
   deletePaper,
   getAllPapers,
+  getAuthorSubmissions,
   saveTrendingPapers,
   getTrendingPapers,
   downloadCertificate
