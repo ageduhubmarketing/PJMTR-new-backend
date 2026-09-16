@@ -38,6 +38,11 @@ const authorSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    // Profile Image
+        profileImage: {
+          data: Buffer,
+          contentType: String
+        },
 
     // Profile Details
     mobile: {
