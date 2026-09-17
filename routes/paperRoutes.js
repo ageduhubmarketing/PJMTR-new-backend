@@ -19,7 +19,8 @@ const {
   getAuthorSubmissions,
   saveTrendingPapers,
   getTrendingPapers,
-  downloadCertificate
+  downloadCertificate,
+  downloadRevisionFile
 } = require('../Controllers/paperController');
 
 // =============================
@@ -72,4 +73,6 @@ router.post('/trending-papers', saveTrendingPapers);
 router.get('/trending-papers', getTrendingPapers);
 // Download Certificate from MongoDB
 router.get("/certificate/:id", downloadCertificate);
+// Download Revision File
+router.get("/revision-file/:id",authorAuth,downloadRevisionFile);
 module.exports = router;
