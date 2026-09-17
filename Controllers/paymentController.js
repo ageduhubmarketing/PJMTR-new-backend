@@ -110,7 +110,7 @@ await updatedPayment.save();
   }
 };
 // Get Logged-in Author Payments
-const getAuthorPayments = async (req, res) => {
+exports.getAuthorPayments = async (req, res) => {
   try {
     const papers = await Paper.find({
       authorId: req.author.id,
