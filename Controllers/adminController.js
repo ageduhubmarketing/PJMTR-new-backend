@@ -679,10 +679,14 @@ exports.sendToRevision = async (req, res) => {
     };
 
     // Admin attachment
-    if (req.file) {
+      if (req.file) {
+      const fileUrl = `${req.protocol}://${req.get("host")}/${req.path
+        ? req.file.path.replace(/\\/g, "/")
+        : ""}`;
+    
       newRevision.adminAttachment = {
         fileName: req.file.originalname,
-        fileUrl: req.file.path || "",
+        fileUrl: fileUrl,
       };
     }
 
