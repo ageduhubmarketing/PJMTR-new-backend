@@ -1349,3 +1349,93 @@ exports.submitAuthorRevision = async (req, res) => {
     });
   }
 };
+// Download Revision Files
+exports.downloadRevisionFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, revisionNumber } = req.query;
+
+    const paper = await Paper.findOne({
+      _id: id,
+      authorId: req.author.id,
+    });
+
+    if (!paper) {
+      return res.status(404).json({
+        message: "Paper not found",
+      });
+    }
+
+    const revision = revisionNumber
+      ? paper.revisionHistory?.find(
+          (item) =>
+            item.revisionNumber === Number(revisionNumber)
+        )
+      : paper.revisionHistory?.[
+          paper.revisionHistory.length - 1
+        ];
+
+    if (!revision) {
+      return res.status(404).json({
+        message: "Revision not found",
+      });
+    }
+
+    // Admin Attached PDF
+    if (type === "admin") {
+      const filePath = revision.adminAttachment?.fileUrl;
+
+      if (!filePath) {
+        return res.status(404).json({
+          message: "Admin attachment not found",
+        });
+      }
+
+      const absolutePath = path.resolve(filePath);
+
+      if (!fs.existsSync(absolutePath)) {
+        return res.status(404).json({
+          message: "Attachment file not found",
+        });
+      }
+
+      return res.download(
+        absolutePath,
+        revision.adminAttachment.fileName || "revision-file.pdf"
+      );
+    }
+
+    // Author Revised PDF
+    if (type === "revised") {
+      const revisedFile = revision.revisedFile;
+
+      if (!revisedFile?.data) {
+        return res.status(404).json({
+          message: "Revised file not found",
+        });
+      }
+
+      res.setHeader(
+        "Content-Type",
+        revisedFile.contentType || "application/pdf"
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${revisedFile.filename || "revised-paper.pdf"}"`
+      );
+
+      return res.send(revisedFile.data);
+    }
+
+    return res.status(400).json({
+      message: "Invalid file type",
+    });
+  } catch (error) {
+    console.error("Download Revision File Error:", error);
+
+    res.status(500).json({
+      message: "Failed to download revision file",
+    });
+  }
+};
