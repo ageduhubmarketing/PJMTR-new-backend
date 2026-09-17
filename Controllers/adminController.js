@@ -678,17 +678,13 @@ exports.sendToRevision = async (req, res) => {
       status: "Revision Required",
     };
 
-    // Admin attachment
-      if (req.file) {
-      const fileUrl = `${req.protocol}://${req.get("host")}/${req.path
-        ? req.file.path.replace(/\\/g, "/")
-        : ""}`;
-    
-      newRevision.adminAttachment = {
-        fileName: req.file.originalname,
-        fileUrl: fileUrl,
-      };
-    }
+     // Admin attachment
+if (req.file) {
+  newRevision.adminAttachment = {
+    fileName: req.file.originalname,
+    fileUrl: req.file.path.replace(/\\/g, "/"),
+  };
+}
 
     // Save revision history
     if (!Array.isArray(paper.revisionHistory)) {
