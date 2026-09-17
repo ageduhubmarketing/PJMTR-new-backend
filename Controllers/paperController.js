@@ -1287,3 +1287,62 @@ exports.getAuthorRevisions = async (req, res) => {
     });
   }
 };
+// Submit Author Revision
+exports.submitAuthorRevision = async (req, res) => {
+  try {
+    const { paperId } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload revised PDF",
+      });
+    }
+
+    const paper = await Paper.findOne({
+      _id: paperId,
+      authorId: req.author.id,
+      status: "Revision",
+    });
+
+    if (!paper) {
+      return res.status(404).json({
+        success: false,
+        message: "Revision paper not found",
+      });
+    }
+
+    if (!paper.revisionHistory || paper.revisionHistory.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Revision history not found",
+      });
+    }
+
+    const latestRevision =
+      paper.revisionHistory[paper.revisionHistory.length - 1];
+
+    latestRevision.revisedFile = {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+      data: req.file.buffer,
+    };
+
+    latestRevision.submittedAt = new Date();
+    latestRevision.status = "Submitted";
+
+    await paper.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Revision submitted successfully",
+    });
+  } catch (error) {
+    console.error("Submit Author Revision Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to submit revision",
+    });
+  }
+};
