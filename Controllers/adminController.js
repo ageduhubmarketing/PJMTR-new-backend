@@ -686,6 +686,9 @@ exports.sendToRevision = async (req, res) => {
     }
 
     // Save revision history
+    if (!Array.isArray(paper.revisionHistory)) {
+      paper.revisionHistory = [];
+    }
     paper.revisionHistory.push(newRevision);
 
     // Update paper status
