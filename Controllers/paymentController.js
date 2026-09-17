@@ -112,22 +112,36 @@ await updatedPayment.save();
 // Get Logged-in Author Payments
 exports.getAuthorPayments = async (req, res) => {
   try {
+    console.log("========== AUTHOR PAYMENT DEBUG ==========");
+
+    console.log("Logged-in Author ID:", req.author.id);
+
     const papers = await Paper.find({
       authorId: req.author.id,
-    }).select("applicationId");
+    }).select("applicationId title authorId");
+
+    console.log("Author Papers:", papers);
 
     const applicationIds = papers.map(
       (paper) => paper.applicationId
     );
 
+    console.log("Application IDs:", applicationIds);
+
     const payments = await Payment.find({
       applicationId: { $in: applicationIds },
     }).sort({ createdAt: -1 });
+
+    console.log("Payments Found:", payments);
+    console.log("Total Payments:", payments.length);
+
+    console.log("========== DEBUG END ==========");
 
     res.status(200).json({
       success: true,
       payments,
     });
+
   } catch (error) {
     console.error("Get Author Payments Error:", error);
 
