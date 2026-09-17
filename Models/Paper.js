@@ -205,6 +205,18 @@ status: {
   ],
   default: "Under Reviewing",
 }, 
+  // Author Status Tracking
+authorStatus: {
+  type: String,
+  enum: [
+    "Under Reviewing",
+    "Approved",
+    "Rejected",
+    "Revision",
+    "Published"
+  ],
+  default: "Under Reviewing",
+},
   adminRemark: {
   type: String,
   default: "",
