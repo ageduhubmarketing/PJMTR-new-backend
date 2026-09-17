@@ -248,7 +248,77 @@ deletedAt: {
   type: Date,
   default: null,
 },
+
+// Revision History
+revisionHistory: [
+  {
+    revisionNumber: {
+      type: Number,
+      default: 1,
+    },
+
+    revisionReason: {
+      type: String,
+      default: "",
+    },
+
+    revisionDeadline: {
+      type: Date,
+      default: null,
+    },
+
+    adminAttachment: {
+      fileName: {
+        type: String,
+        default: "",
+      },
+      fileUrl: {
+        type: String,
+        default: "",
+      },
+    },
+
+    revisedFile: {
+      filename: {
+        type: String,
+        default: "",
+      },
+      contentType: {
+        type: String,
+        default: "",
+      },
+      data: {
+        type: Buffer,
+        default: null,
+      },
+    },
+
+    submittedAt: {
+      type: Date,
+      default: null,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    status: {
+      type: String,
+      enum: [
+        "Revision Required",
+        "Submitted",
+        "Approved",
+        "Revision Again",
+        "Rejected",
+      ],
+      default: "Revision Required",
+    },
+  },
+],
+
 });
+
 
 // ==============================
 // Export model
