@@ -1,6 +1,7 @@
 const razorpay = require("../config/razorpay");
 const crypto = require("crypto");
 const Payment = require("../Models/Payment");
+const Paper = require("../Models/Paper");
 const generateInvoice = require("../utils/generateInvoice");
 
 // createOrder
@@ -106,5 +107,33 @@ await updatedPayment.save();
       message: "Payment verification failed"
     });
 
+  }
+};
+// Get Logged-in Author Payments
+const getAuthorPayments = async (req, res) => {
+  try {
+    const papers = await Paper.find({
+      authorId: req.author.id,
+    }).select("applicationId");
+
+    const applicationIds = papers.map(
+      (paper) => paper.applicationId
+    );
+
+    const payments = await Payment.find({
+      applicationId: { $in: applicationIds },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      payments,
+    });
+  } catch (error) {
+    console.error("Get Author Payments Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch author payments",
+    });
   }
 };
