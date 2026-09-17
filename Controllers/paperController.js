@@ -35,6 +35,8 @@ const getRecipientDetails = (paper) => {
   };
 
 };
+const fs = require("fs");
+const path = require("path");
 
 // Submit Paper by Author
 exports.submitAuthorPaper = async (req, res) => {
