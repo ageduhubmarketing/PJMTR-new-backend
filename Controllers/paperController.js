@@ -1275,7 +1275,7 @@ exports.getAuthorRevisions = async (req, res) => {
         $ne: [],
       },
     })
-      .select("-file.data -coverLetter.data -supplementaryFile.data")
+      .select(`-file.data -coverLetter.data -supplementaryFile.data -revisionHistory.revisedFile.data`)
       .sort({ revisionAt: -1 })
       .lean();
 
