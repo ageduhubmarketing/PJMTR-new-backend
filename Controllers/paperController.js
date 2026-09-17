@@ -1345,6 +1345,7 @@ exports.submitAuthorRevision = async (req, res) => {
 
     latestRevision.submittedAt = new Date();
     latestRevision.status = "Submitted";
+    paper.authorStatus = "Under Reviewing";
 
     await paper.save();
 
