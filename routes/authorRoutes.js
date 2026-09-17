@@ -9,6 +9,8 @@ const {
   updateAuthorProfile
 } = require('../Controllers/authorController');
 
+const {getAuthorPayments} = require("../Controllers/paymentController");
+
 const authorAuth = require('../Middleware/authorAuth');
 
 const router = express.Router();
@@ -47,5 +49,6 @@ router.put(
   upload.single('profileImage'),
   updateAuthorProfile
 );
+router.get("/payments",authorAuth,getAuthorPayments);
 
 module.exports = router;
