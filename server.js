@@ -85,7 +85,6 @@ app.use('/api/subscribers', subscriberRoutes);
 // AUTHOR ROUTES
 // ================================
 app.use('/api/author', authorRoutes);
-app.use("/api/author", authorRoutes);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
