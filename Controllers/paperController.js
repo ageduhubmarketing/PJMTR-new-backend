@@ -1268,7 +1268,10 @@ exports.getAuthorRevisions = async (req, res) => {
   try {
     const papers = await Paper.find({
       authorId: req.author.id,
-      status: "Revision",
+      revisionHistory: {
+        $exists: true,
+        $ne: [],
+      },
     })
       .select("-file.data -coverLetter.data -supplementaryFile.data")
       .sort({ revisionAt: -1 })
