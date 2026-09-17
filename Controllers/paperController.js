@@ -1325,7 +1325,17 @@ exports.submitAuthorRevision = async (req, res) => {
     }
 
     const latestRevision =
-      paper.revisionHistory[paper.revisionHistory.length - 1];
+    paper.revisionHistory[paper.revisionHistory.length - 1];
+   if (
+      !["Revision Required", "Revision Again"].includes(
+        latestRevision.status
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Revision submission is not currently allowed",
+      });
+    }
 
     latestRevision.revisedFile = {
       filename: req.file.originalname,
