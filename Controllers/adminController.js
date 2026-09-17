@@ -693,6 +693,8 @@ exports.sendToRevision = async (req, res) => {
 
     // Update paper status
     paper.status = "Revision";
+    paper.authorStatus = "Revision";
+    
     paper.adminRemark = revisionReason || "";
     paper.revisionAt = new Date();
 
