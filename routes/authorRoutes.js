@@ -10,6 +10,7 @@ const {
 } = require('../Controllers/authorController');
 
 const {getAuthorPayments} = require("../Controllers/paymentController");
+const {getAuthorRevisions,submitAuthorRevision} = require("../Controllers/paperController");
 
 const authorAuth = require('../Middleware/authorAuth');
 
@@ -29,6 +30,20 @@ const upload = multer({
     }
   }
 });
+// Revised PDF Upload
+const revisionUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"));
+    }
+  }
+});
 
 // Author Registration
 router.post('/register', registerAuthor);
@@ -43,12 +58,10 @@ router.post('/login', loginAuthor);
 router.get('/profile', authorAuth, getAuthorProfile);
 
 // Update Author Profile
-router.put(
-  '/profile',
-  authorAuth,
-  upload.single('profileImage'),
-  updateAuthorProfile
-);
+router.put('/profile',authorAuth,upload.single('profileImage'),updateAuthorProfile);
 router.get("/payments",authorAuth,getAuthorPayments);
+// Revision Routes
+router.get("/revisions",authorAuth,getAuthorRevisions);
+router.post("/revisions/:paperId/submit",authorAuth,revisionUpload.single("revisedFile"),submitAuthorRevision);
 
 module.exports = router;
