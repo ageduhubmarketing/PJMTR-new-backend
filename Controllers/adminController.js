@@ -652,164 +652,134 @@ exports.rejectPaper = async (req, res) => {
 
 };
 exports.sendToRevision = async (req, res) => {
-
   try {
-
     const {
       revisionReason,
       revisionDeadline,
     } = req.body;
 
-    const paper =
-      await Paper.findByIdAndUpdate(
-
-        req.params.id,
-
-        {
-          status: "Revision",
-
-          revisionReason,
-
-          revisionDeadline,
-
-          revisionAt:
-            new Date(),
-        },
-
-        { new: true }
-
-      );
+    const paper = await Paper.findById(req.params.id);
 
     if (!paper) {
-
       return res.status(404).json({
-
-        message:
-          "Paper not found",
-
+        message: "Paper not found",
       });
     }
 
+    // New revision entry
+    const revisionNumber =
+      (paper.revisionHistory?.length || 0) + 1;
 
-  // ==========================
-// SEND REVISION EMAIL
-// ==========================
+    const newRevision = {
+      revisionNumber,
+      revisionReason: revisionReason || "",
+      revisionDeadline: revisionDeadline || null,
+      status: "Revision Required",
+    };
 
-try {
-
-  const {
-    recipientEmail,
-    recipientName,
-  } = getRecipientDetails(paper);
-
-  if (recipientEmail) {
-
-    let attachments = [];
-    console.log("========== REVISION MAIL DEBUG ==========");
-console.log("Paper ID:", paper._id);
-console.log("Application ID:", paper.applicationId);
-console.log("Recipient Email:", recipientEmail);
-console.log("Recipient Name:", recipientName);
-console.log("Revision Reason:", revisionReason);
-console.log("Revision Deadline:", revisionDeadline);
-console.log("========================================");
-
-    if (req.file && req.file.path) {
-
-      try {
-
-        const fileContent =
-          fs.readFileSync(req.file.path);
-
-        attachments.push({
-
-          name:
-            req.file.originalname,
-
-          content:
-            fileContent.toString("base64"),
-
-        });
-
-      } catch (err) {
-
-        console.log(
-          "Attachment read error:",
-          err
-        );
-
-      }
-
+    // Admin attachment
+    if (req.file) {
+      newRevision.adminAttachment = {
+        fileName: req.file.originalname,
+        fileUrl: req.file.path || "",
+      };
     }
 
-const emailData = {
+    // Save revision history
+    paper.revisionHistory.push(newRevision);
 
-  sender: {
-    email: "editor@pjmtr.in",
-    name: "PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH",
-  },
+    // Update paper status
+    paper.status = "Revision";
+    paper.adminRemark = revisionReason || "";
+    paper.revisionAt = new Date();
 
-  to: [
-    {
-      email: recipientEmail,
-      name: recipientName,
-    },
-  ],
+    await paper.save();
 
-  templateId: 4,
+    // ==========================
+    // SEND REVISION EMAIL
+    // ==========================
 
-  params: {
-    author_name: recipientName,
-    title: paper.title,
-    applicationId: paper.applicationId,
-    revision_reason: revisionReason,
-    revision_deadline: revisionDeadline,
-  },
+    try {
+      const {
+        recipientEmail,
+        recipientName,
+      } = getRecipientDetails(paper);
 
-};
+      if (recipientEmail) {
+        let attachments = [];
 
-if (attachments.length > 0) {
-  emailData.attachment = attachments;
-}
+        console.log("========== REVISION MAIL DEBUG ==========");
+        console.log("Paper ID:", paper._id);
+        console.log("Application ID:", paper.applicationId);
+        console.log("Recipient Email:", recipientEmail);
+        console.log("Recipient Name:", recipientName);
+        console.log("Revision Reason:", revisionReason);
+        console.log("Revision Deadline:", revisionDeadline);
+        console.log("========================================");
 
-await tranEmailApi.sendTransacEmail(emailData);
+        if (req.file && req.file.path) {
+          try {
+            const fileContent = fs.readFileSync(req.file.path);
 
-   console.log("✅ REVISION EMAIL SUCCESSFULLY SENT");
+            attachments.push({
+              name: req.file.originalname,
+              content: fileContent.toString("base64"),
+            });
+          } catch (err) {
+            console.log("Attachment read error:", err);
+          }
+        }
 
-  }
+        const emailData = {
+          sender: {
+            email: "editor@pjmtr.in",
+            name: "PACIFIC JOURNAL OF MODERN THEORIES AND RESEARCH",
+          },
 
-} catch (mailError) {
+          to: [
+            {
+              email: recipientEmail,
+              name: recipientName,
+            },
+          ],
 
-  console.log("❌ BREVO REVISION ERROR:");
-console.log(JSON.stringify(mailError, null, 2));
+          templateId: 4,
 
-}
+          params: {
+            author_name: recipientName,
+            title: paper.title,
+            applicationId: paper.applicationId,
+            revision_reason: revisionReason,
+            revision_deadline: revisionDeadline,
+          },
+        };
+
+        if (attachments.length > 0) {
+          emailData.attachment = attachments;
+        }
+
+        await tranEmailApi.sendTransacEmail(emailData);
+
+        console.log("✅ REVISION EMAIL SUCCESSFULLY SENT");
+      }
+    } catch (mailError) {
+      console.log("❌ BREVO REVISION ERROR:");
+      console.log(JSON.stringify(mailError, null, 2));
+    }
 
     res.json({
-
-      message:
-        "Paper sent to revision successfully",
-
+      message: "Paper sent to revision successfully",
       paper,
-
     });
-
   } catch (error) {
+    console.log("Revision failed:", error);
 
     res.status(500).json({
-
-      message:
-        "Revision failed",
-
-      error:
-        error.message,
-
+      message: "Revision failed",
+      error: error.message,
     });
-
   }
-
 };
-
 exports.deletePaper = async (req, res) => {
 
   try {
