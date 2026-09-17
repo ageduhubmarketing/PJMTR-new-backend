@@ -1261,7 +1261,29 @@ exports.downloadCertificate = async (req, res) => {
       error: error.message,
 
     });
-
   }
+};
+// Get Author Revisions
+exports.getAuthorRevisions = async (req, res) => {
+  try {
+    const papers = await Paper.find({
+      authorId: req.author.id,
+      status: "Revision",
+    })
+      .select("-file.data -coverLetter.data -supplementaryFile.data")
+      .sort({ revisionAt: -1 })
+      .lean();
 
+    res.status(200).json({
+      success: true,
+      papers,
+    });
+  } catch (error) {
+    console.error("Get Author Revisions Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch revisions",
+    });
+  }
 };
