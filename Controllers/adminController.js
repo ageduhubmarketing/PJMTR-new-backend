@@ -284,10 +284,11 @@ exports.approvePaper = async (req, res) => {
 
         req.params.id,
 
-        {
-          status: "Approved",
-          approvedAt: new Date(),
-        },
+       {
+        status: "Approved",
+        authorStatus: "Approved",
+        approvedAt: new Date(),
+      },
 
         { new: true }
 
