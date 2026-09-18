@@ -32,12 +32,21 @@ const authMiddleware = require('../Middleware/authMiddleware');
 const adminMiddleware = require('../Middleware/adminmiddleware');
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+const revisionUploadDir = path.join(
+  process.cwd(),
+  "uploads",
+  "revision-files"
+);
+
+fs.mkdirSync(revisionUploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
 
   destination: function (req, file, cb) {
 
-    cb(null, "uploads/revision-files");
+    cb(null, revisionUploadDir);
 
   },
 
