@@ -1452,7 +1452,9 @@ exports.getAuthorCertificates = async (req, res) => {
 
     const certificates = await Certificate.find({
       paperId: { $in: paperIds },
-    }).sort({ createdAt: -1 });
+    })
+      .select("-certificateFile.data")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
