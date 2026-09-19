@@ -1574,6 +1574,9 @@ exports.downloadRevisionFileAdmin = async (req, res) => {
         message: "Revised file not found",
       });
     }
+    // Mark revised file as downloaded by admin
+    revision.revisedFile.adminDownloaded = true;
+    await paper.save();
 
     res.set({
       "Content-Type":
