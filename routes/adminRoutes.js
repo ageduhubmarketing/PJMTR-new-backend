@@ -25,7 +25,8 @@ const {
   assignReviewer,
   saveRemark,
   uploadPaperFiles,
-  deletePaperFile
+  deletePaperFile,
+  downloadRevisionFileAdmin
 } = require('../Controllers/adminController');
 
 const authMiddleware = require('../Middleware/authMiddleware');
@@ -131,6 +132,7 @@ router.put( "/assign-reviewer/:paperId", authMiddleware, adminMiddleware, assign
 router.put( "/remark/:id", authMiddleware, adminMiddleware, saveRemark);
 router.post( "/upload-paper-file/:paperId", authMiddleware, adminMiddleware, adminFileUpload.array( "files",5 ), uploadPaperFiles);
 router.delete( "/delete-paper-file/:paperId/:fileId", authMiddleware, adminMiddleware, deletePaperFile);
+router.get( "/papers/:paperId/revision-file/:revisionNumber", authMiddleware, adminMiddleware, downloadRevisionFileAdmin);
 
 // ==============================
 // 🚀 EXPORT
