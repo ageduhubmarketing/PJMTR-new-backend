@@ -303,6 +303,10 @@ revisionHistory: [
         type: Buffer,
         default: null,
       },
+      adminDownloaded: {
+    type: Boolean,
+    default: false,
+  },
     },
 
     submittedAt: {
