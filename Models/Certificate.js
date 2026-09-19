@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const certificateSchema = new mongoose.Schema({
 
+  authorId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Author",
+  required: true,
+  index: true,
+},
   paperId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Paper",
