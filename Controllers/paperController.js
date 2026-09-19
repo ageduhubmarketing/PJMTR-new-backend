@@ -939,6 +939,8 @@ if (paper.authors && paper.authors.length > 0) {
 
 if (existingCertificate) {
 
+  existingCertificate.authorId = paper.authorId;
+
   existingCertificate.applicationId = paper.applicationId;
 
   existingCertificate.paperTitle = paper.title;
@@ -960,7 +962,7 @@ if (existingCertificate) {
 } else {
 
   savedCertificate = await Certificate.create({
-    authorId: author._id,
+    authorId: paper.authorId,
     paperId: paper._id,
     applicationId: paper.applicationId,
     paperTitle: paper.title,
