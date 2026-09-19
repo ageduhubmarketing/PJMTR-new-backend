@@ -960,19 +960,13 @@ if (existingCertificate) {
 } else {
 
   savedCertificate = await Certificate.create({
-
+    authorId: author._id,
     paperId: paper._id,
-
     applicationId: paper.applicationId,
-
     paperTitle: paper.title,
-
     authorName: authorName,
-
     certificateLink: "temp",
-
     doi: paper.doi || "",
-
     certificateFile: {
       filename: certificate.fileName,
       contentType: "application/pdf",
