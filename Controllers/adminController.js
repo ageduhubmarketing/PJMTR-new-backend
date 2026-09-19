@@ -264,7 +264,18 @@ papers.forEach((paper) => {
   ...filter,
   isDeleted: { $ne: true },
 });
-
+// Count papers with pending revised files
+const pendingRevisionCount = await Paper.countDocuments({
+  ...filter,
+  isDeleted: { $ne: true },
+  revisionHistory: {
+    $elemMatch: {
+      "revisedFile.filename": { $exists: true, $ne: "" },
+      "revisedFile.adminDownloaded": { $ne: true },
+      status: "Submitted",
+    },
+  },
+});
     res.json({
   papers,
   currentPage: page,
@@ -272,6 +283,7 @@ papers.forEach((paper) => {
     ? Math.ceil(total / limit)
     : 1,
   totalPapers: total,
+  pendingRevisionCount,
 });
 
   } catch (err) {
