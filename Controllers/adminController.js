@@ -832,21 +832,21 @@ exports.deletePaper = async (req, res) => {
   }
 };
 exports.getTrashPapers = async (req, res) => {
-
   try {
-
-    const papers = await Paper.find({
-  isDeleted: true,
-}).lean();
+    const papers = await Paper.find({ isDeleted: true })
+      .select(
+        "-file.data -coverLetter.data -supplementaryFile.data"
+      )
+      .sort({ deletedAt: -1 })
+      .lean();
 
     res.json(papers);
-
   } catch (error) {
+    console.error("Trash fetch error:", error);
 
     res.status(500).json({
       message: "Failed to fetch trash papers",
     });
-
   }
 };
 
