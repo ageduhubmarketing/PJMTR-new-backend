@@ -11,8 +11,9 @@ const {
 
 const {getAuthorPayments} = require("../Controllers/paymentController");
 const {getAuthorRevisions,submitAuthorRevision} = require("../Controllers/paperController");
-const {getAuthorCertificates,} = require("../controllers/paperController");
-
+const {
+  getAuthorCertificates,
+} = require("../Controllers/paperController");
 const authorAuth = require('../Middleware/authorAuth');
 
 const router = express.Router();
@@ -64,6 +65,10 @@ router.get("/payments",authorAuth,getAuthorPayments);
 // Revision Routes
 router.get("/revisions",authorAuth,getAuthorRevisions);
 router.post("/revisions/:paperId/submit",authorAuth,revisionUpload.single("revisedFile"),submitAuthorRevision);
-router.get("/author/certificates",authMiddleware,getAuthorCertificates);
+router.get(
+  "/author/certificates",
+  authorAuth,
+  getAuthorCertificates
+);
 
 module.exports = router;
