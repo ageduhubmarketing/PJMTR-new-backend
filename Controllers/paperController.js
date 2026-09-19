@@ -913,17 +913,6 @@ if (paper.authors && paper.authors.length > 0) {
   paper.authors.forEach(addAuthor);
 }
 
-    const certificate =
-      await generateCertificate(
-
-        paper,
-
-        volumeNumber,
-
-        issueNumber
-
-      );
-
     // =========================
     // CERTIFICATE LINK
     // =========================
@@ -1449,6 +1438,32 @@ exports.downloadRevisionFile = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to download revision file",
+    });
+  }
+};
+// Get Author Certificates
+exports.getAuthorCertificates = async (req, res) => {
+  try {
+    const papers = await Paper.find({
+      authorId: req.author.id,
+    }).select("_id");
+
+    const paperIds = papers.map((paper) => paper._id);
+
+    const certificates = await Certificate.find({
+      paperId: { $in: paperIds },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      certificates,
+    });
+  } catch (error) {
+    console.error("Get Author Certificates Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch author certificates",
     });
   }
 };
