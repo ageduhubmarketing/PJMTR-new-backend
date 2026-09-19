@@ -228,6 +228,7 @@ if (fromDate || toDate) {
       adminFiles
       adminRemark
       isRead
+      revisionHistory
     `
 )
      .sort({ _id: -1 })
@@ -248,6 +249,15 @@ papers.forEach((paper) => {
 
   if (paper.supplementaryFile) {
     delete paper.supplementaryFile.data;
+  }
+
+  // Remove revised file binary data
+  if (paper.revisionHistory) {
+    paper.revisionHistory.forEach((revision) => {
+      if (revision.revisedFile) {
+        delete revision.revisedFile.data;
+      }
+    });
   }
 });
     const total = await Paper.countDocuments({
@@ -1541,4 +1551,44 @@ exports.deletePaperFile = async (
 
   }
 
+};
+exports.downloadRevisionFileAdmin = async (req, res) => {
+  try {
+    const { paperId, revisionNumber } = req.params;
+
+    const paper = await Paper.findById(paperId);
+
+    if (!paper) {
+      return res.status(404).json({
+        message: "Paper not found",
+      });
+    }
+
+    const revision = paper.revisionHistory?.find(
+      (rev) =>
+        Number(rev.revisionNumber) === Number(revisionNumber)
+    );
+
+    if (!revision || !revision.revisedFile?.data) {
+      return res.status(404).json({
+        message: "Revised file not found",
+      });
+    }
+
+    res.set({
+      "Content-Type":
+        revision.revisedFile.contentType ||
+        "application/octet-stream",
+
+      "Content-Disposition": `attachment; filename="${revision.revisedFile.filename}"`,
+    });
+
+    res.send(revision.revisedFile.data);
+  } catch (error) {
+    console.error("Admin revision download error:", error);
+
+    res.status(500).json({
+      message: "File download failed",
+    });
+  }
 };
